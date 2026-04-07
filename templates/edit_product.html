@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Edit Product{% endblock %}
+{% block page_title %}Edit Product{% endblock %}
+{% block content %}
+<div class="breadcrumb-ns"><a href="{{ url_for('dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><a href="{{ url_for('products') }}">Products</a><i class="bi bi-chevron-right"></i><span>Edit: {{ product.name }}</span></div>
+<div class="pg-head">
+    <div><div class="pg-head-title">Edit Product</div><div class="pg-head-sub">Updating: <strong>{{ product.name }}</strong></div></div>
+    <a href="{{ url_for('products') }}" class="btn-outline"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+<div style="display:grid;grid-template-columns:1fr 270px;gap:20px;align-items:start;">
+    <div class="ns-panel">
+        <div class="ns-panel-head" style="background:linear-gradient(135deg,#f0f6fe,#e4f0fc);">
+            <h6><div class="head-icon" style="background:var(--steel);color:white;"><i class="bi bi-pencil-fill"></i></div> Edit Details</h6>
+        </div>
+        <div style="padding:24px;">
+            <form method="POST" action="{{ url_for('edit_product',id=product.id) }}" novalidate>
+                <div class="form-sec"><i class="bi bi-info-circle-fill"></i> Basic Info</div>
+                <div class="form-g"><label class="form-lbl">Product Name <span class="req">*</span></label><input type="text" name="name" class="form-ctrl" value="{{ product.name }}" required></div>
+                <div class="form-row">
+                    <div class="form-g"><label class="form-lbl">Category <span class="req">*</span></label><input type="text" name="category" class="form-ctrl" value="{{ product.category }}" list="cL" required><datalist id="cL"><option value="Electronics"><option value="Furniture"><option value="Accessories"><option value="Stationery"></datalist></div>
+                    <div class="form-g"><label class="form-lbl">Supplier</label><input type="text" name="supplier" class="form-ctrl" value="{{ product.supplier or '' }}"></div>
+                </div>
+                <div class="form-sec mt-3"><i class="bi bi-currency-rupee"></i> Stock & Pricing</div>
+                <div class="form-row">
+                    <div class="form-g"><label class="form-lbl">Quantity <span class="req">*</span></label><input type="number" name="quantity" class="form-ctrl" value="{{ product.quantity }}" min="0" required></div>
+                    <div class="form-g"><label class="form-lbl">Unit Price ₹ <span class="req">*</span></label><input type="number" name="price" class="form-ctrl" value="{{ product.price }}" step="0.01" min="0" required></div>
+                </div>
+                <div class="form-sec mt-3"><i class="bi bi-card-text"></i> Notes</div>
+                <div class="form-g"><label class="form-lbl">Description</label><textarea name="description" class="form-ctrl" rows="3">{{ product.description or '' }}</textarea></div>
+                <div class="form-actions"><a href="{{ url_for('products') }}" class="btn-outline btn-sm">Cancel</a><button type="submit" class="btn-navy btn-sm"><i class="bi bi-check-circle-fill"></i> Save Changes</button></div>
+            </form>
+        </div>
+    </div>
+    <div class="tips-box">
+        <h6><i class="bi bi-info-circle-fill"></i> Product Info</h6>
+        <div class="info-pairs">
+            <div class="info-pair"><span>ID</span><strong>#{{ product.id }}</strong></div>
+            <div class="info-pair"><span>Category</span><strong>{{ product.category }}</strong></div>
+            <div class="info-pair"><span>Quantity</span><strong>{{ product.quantity }} units</strong></div>
+            <div class="info-pair"><span>Price</span><strong>₹{{ "%.2f"|format(product.price) }}</strong></div>
+            <div class="info-pair"><span>Added</span><strong>{{ product.date_added[:10] }}</strong></div>
+        </div>
+        <p class="text-muted-xs mt-3"><i class="bi bi-info-circle me-1"></i>Use Stock In / Out from Products page to track quantity changes with history.</p>
+    </div>
+</div>
+{% endblock %}
