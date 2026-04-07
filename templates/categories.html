@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Categories{% endblock %}
+{% block page_title %}Categories{% endblock %}
+{% block content %}
+<div class="pg-head">
+    <div>
+        <div class="pg-head-title">Categories</div>
+        <div class="pg-head-sub">Inventory breakdown by product category — {{ categories|length }} group(s)</div>
+    </div>
+    <a href="{{ url_for('products') }}" class="btn-sky"><i class="bi bi-box-seam-fill"></i> View Products</a>
+</div>
+
+{% if categories %}
+<div class="cats-grid">
+    {% for cat in categories %}
+    <div class="cat-card">
+        <!-- Icon Top -->
+        <div class="cat-card-top">
+            {% if 'electron' in cat.category|lower %}<i class="bi bi-cpu-fill"></i>
+            {% elif 'furni' in cat.category|lower %}<i class="bi bi-house-fill"></i>
+            {% elif 'cloth' in cat.category|lower %}<i class="bi bi-bag-fill"></i>
+            {% elif 'station' in cat.category|lower %}<i class="bi bi-pencil-fill"></i>
+            {% elif 'access' in cat.category|lower %}<i class="bi bi-watch"></i>
+            {% elif 'food' in cat.category|lower or 'bever' in cat.category|lower %}<i class="bi bi-cup-hot-fill"></i>
+            {% elif 'tool' in cat.category|lower or 'hard' in cat.category|lower %}<i class="bi bi-tools"></i>
+            {% elif 'health' in cat.category|lower or 'beauty' in cat.category|lower %}<i class="bi bi-heart-fill"></i>
+            {% elif 'sport' in cat.category|lower %}<i class="bi bi-bicycle"></i>
+            {% elif 'book' in cat.category|lower %}<i class="bi bi-book-fill"></i>
+            {% else %}<i class="bi bi-grid-fill"></i>{% endif %}
+        </div>
+
+        <!-- Body -->
+        <div class="cat-card-body">
+            <div class="cat-card-name">{{ cat.category }}</div>
+            <div class="cat-stats-row">
+                <div class="cat-stat-block">
+                    <div class="csv">{{ cat.product_count }}</div>
+                    <div class="csl">Products</div>
+                </div>
+                <div class="cat-stat-block">
+                    <div class="csv">{{ cat.total_qty or 0 }}</div>
+                    <div class="csl">Units</div>
+                </div>
+                <div class="cat-stat-block">
+                    <div class="csv" style="font-size:.88rem;">₹{{ "{:,.0f}".format(cat.total_value or 0) }}</div>
+                    <div class="csl">Value</div>
+                </div>
+            </div>
+
+            <!-- Mini progress bar showing stock health -->
+            {% set fill = [(cat.total_qty or 0), 200] | min %}
+            <div style="margin-top:10px;">
+                <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--steel-light);margin-bottom:4px;">
+                    <span>Stock level</span>
+                    <span>{{ cat.min_qty or 0 }}–{{ cat.max_qty or 0 }} units range</span>
+                </div>
+                <div style="height:5px;background:var(--sky-light);border-radius:3px;overflow:hidden;">
+                    <div class="prog-bar" style="height:100%;width:0%;transition:width 1s ease;" data-w="{{ [((cat.total_qty or 0) / 200 * 100)|int, 100]|min }}%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="cat-card-foot">
+            <span style="color:var(--steel-light);font-size:.73rem;">{{ cat.product_count }} product(s)</span>
+            <a href="{{ url_for('products') }}?category={{ cat.category }}">View Products →</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="ns-panel" style="padding:60px 20px;">
+    <div class="empty-box">
+        <i class="bi bi-tags"></i>
+        <h5>No Categories Yet</h5>
+        <p>Add products to see category analytics here.</p>
+        <a href="{{ url_for('add_product') }}" class="btn-sky mt-3"><i class="bi bi-plus-lg"></i> Add First Product</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
