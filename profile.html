@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}My Profile{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+{% block content %}
+<div class="pg-head">
+    <div>
+        <div class="pg-head-title">My Profile</div>
+        <div class="pg-head-sub">Manage your account settings and credentials</div>
+    </div>
+</div>
+
+<div class="profile-layout">
+
+    <!-- Left: Profile Card -->
+    <div>
+        <div class="profile-card">
+            <div class="profile-av-ring">{{ (user.full_name or user.username)[0].upper() }}</div>
+            <div class="profile-name">{{ user.full_name or user.username }}</div>
+            <div class="profile-role-chip">{{ user.role }}</div>
+            <div class="profile-un">@{{ user.username }}</div>
+            {% if user.email %}
+            <div style="font-size:.78rem;color:var(--steel-light);margin-bottom:16px;">
+                <i class="bi bi-envelope-fill me-1" style="color:var(--sky-med);"></i>{{ user.email }}
+            </div>
+            {% endif %}
+            <div class="profile-stats-row">
+                <div>
+                    <div class="ps-num">{{ total_actions }}</div>
+                    <div class="ps-label">Total Actions</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick links -->
+        <div class="ns-panel mt-3" style="overflow:visible;">
+            <div class="ns-panel-body" style="padding:14px 18px;">
+                <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--steel);margin-bottom:10px;">Quick Links</div>
+                <a href="{{ url_for('dashboard') }}" class="btn-outline btn-sm" style="display:flex;margin-bottom:6px;"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+                <a href="{{ url_for('activity') }}" class="btn-outline btn-sm" style="display:flex;margin-bottom:6px;"><i class="bi bi-activity"></i> Activity Log</a>
+                <a href="{{ url_for('export_csv') }}" class="btn-outline btn-sm" style="display:flex;"><i class="bi bi-download"></i> Export CSV</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Edit Form -->
+    <div class="ns-panel">
+        <div class="ns-panel-head" style="background:linear-gradient(135deg,var(--sky-light),#d4eafd);">
+            <h6>
+                <div class="head-icon" style="background:var(--sky-med);color:white;"><i class="bi bi-person-fill"></i></div>
+                Edit Profile
+            </h6>
+        </div>
+        <div style="padding:26px;">
+            <form method="POST" action="{{ url_for('profile') }}" novalidate>
+                <div class="form-sec"><i class="bi bi-person-badge-fill"></i> Personal Details</div>
+                <div class="form-row">
+                    <div class="form-g">
+                        <label class="form-lbl">Full Name</label>
+                        <input type="text" name="full_name" class="form-ctrl" value="{{ user.full_name or '' }}" placeholder="Your full name">
+                    </div>
+                    <div class="form-g">
+                        <label class="form-lbl">Email Address</label>
+                        <input type="email" name="email" class="form-ctrl" value="{{ user.email or '' }}" placeholder="you@example.com">
+                    </div>
+                </div>
+
+                <div class="form-sec mt-3"><i class="bi bi-lock-fill"></i> Change Password</div>
+                <div style="padding:10px 14px;background:var(--sky-light);border-radius:var(--r-sm);border:1px solid rgba(136,189,242,.3);font-size:.8rem;color:var(--navy-light);margin-bottom:14px;">
+                    <i class="bi bi-info-circle-fill me-2" style="color:var(--sky-med);"></i>Leave password fields blank to keep your current password.
+                </div>
+                <div class="form-row">
+                    <div class="form-g">
+                        <label class="form-lbl">New Password</label>
+                        <input type="password" name="new_password" class="form-ctrl" placeholder="Enter new password">
+                    </div>
+                    <div class="form-g">
+                        <label class="form-lbl">Confirm Password</label>
+                        <input type="password" name="confirm_password" class="form-ctrl" placeholder="Repeat new password">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-sky">
+                        <i class="bi bi-check-circle-fill"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends 'login_base.html' %}
+{% block page %}
+<div class="login-page">
+    <div class="login-card">
+
+        <!-- LEFT: Brand -->
+        <div class="login-left">
+            <div class="login-logo">
+                <div class="login-logo-box">N</div>
+                <div class="login-logo-name">Nex<span>Stock</span></div>
+            </div>
+            <p class="login-tagline">
+                Smart warehouse management for modern teams. Track stock, monitor inventory, and stay in control — all in one place.
+            </p>
+            <div class="login-feat">
+                <div class="lf-icon"><i class="bi bi-lightning-charge-fill"></i></div>
+                <div><div class="lf-title">Real-time Tracking</div><div class="lf-sub">Live updates across all categories</div></div>
+            </div>
+            <div class="login-feat">
+                <div class="lf-icon"><i class="bi bi-bar-chart-line-fill"></i></div>
+                <div><div class="lf-title">Smart Analytics</div><div class="lf-sub">History, trends & export reports</div></div>
+            </div>
+            <div class="login-feat">
+                <div class="lf-icon"><i class="bi bi-bell-fill"></i></div>
+                <div><div class="lf-title">Low Stock Alerts</div><div class="lf-sub">Never run out of critical items</div></div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Form -->
+        <div class="login-right">
+            <div class="login-form-wrap">
+                <div class="login-title">Welcome back 👋</div>
+                <div class="login-sub">Sign in to your NexStock dashboard</div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}{% for cat, msg in messages %}
+                <div class="login-alert la-{{ cat }}">
+                    <i class="bi bi-{% if cat=='danger' %}x-circle{% elif cat=='success' %}check-circle{% else %}info-circle{% endif %}-fill"></i>
+                    {{ msg }}
+                </div>
+                {% endfor %}{% endif %}{% endwith %}
+
+                <form method="POST" action="{{ url_for('login') }}" autocomplete="off">
+                    <div class="form-g">
+                        <label class="form-lbl">Username</label>
+                        <div class="input-with-icon">
+                            <i class="bi bi-person-fill"></i>
+                            <input type="text" name="username" class="form-ctrl" placeholder="Enter your username" required autofocus>
+                        </div>
+                    </div>
+                    <div class="form-g">
+                        <label class="form-lbl">Password</label>
+                        <div class="pwd-wrap">
+                            <input type="password" name="password" id="lpwd" class="form-ctrl" placeholder="Enter your password" required>
+                            <button type="button" class="pwd-eye" onclick="togglePwd()"><i class="bi bi-eye-fill" id="picon"></i></button>
+                        </div>
+                    </div>
+                    <button type="submit" class="login-submit">
+                        <i class="bi bi-box-arrow-in-right"></i> Sign In to Dashboard
+                    </button>
+                </form>
+                <div class="login-hint">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Default: <code>vansh17</code> / <code>Vanshjangir17</code>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+function togglePwd(){const f=document.getElementById('lpwd'),i=document.getElementById('picon');f.type=f.type==='password'?'text':'password';i.className=f.type==='password'?'bi bi-eye-fill':'bi bi-eye-slash-fill';}
+</script>
+{% endblock %}

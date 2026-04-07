@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Stock History{% endblock %}
+{% block page_title %}Stock History{% endblock %}
+{% block content %}
+<div class="pg-head">
+    <div>
+        <div class="pg-head-title">Stock History</div>
+        <div class="pg-head-sub">Every stock in/out transaction — last 100 records</div>
+    </div>
+</div>
+
+<!-- Summary strip -->
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;">
+    <div class="ns-panel" style="padding:16px 20px;border-left:4px solid var(--success);">
+        <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--steel);margin-bottom:4px;">Total Stock In</div>
+        <div style="font-size:1.5rem;font-weight:800;color:var(--success);">
+            +{% set total_in = namespace(v=0) %}{% for h in history %}{% if h.action_type=='IN' %}{% set total_in.v = total_in.v + h.quantity_changed %}{% endif %}{% endfor %}{{ total_in.v }}
+        </div>
+        <div style="font-size:.74rem;color:var(--steel-light);">units added across all time</div>
+    </div>
+    <div class="ns-panel" style="padding:16px 20px;border-left:4px solid var(--warning);">
+        <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--steel);margin-bottom:4px;">Total Stock Out</div>
+        <div style="font-size:1.5rem;font-weight:800;color:var(--warning);">
+            -{% set total_out = namespace(v=0) %}{% for h in history %}{% if h.action_type=='OUT' %}{% set total_out.v = total_out.v + h.quantity_changed %}{% endif %}{% endfor %}{{ total_out.v }}
+        </div>
+        <div style="font-size:.74rem;color:var(--steel-light);">units removed across all time</div>
+    </div>
+    <div class="ns-panel" style="padding:16px 20px;border-left:4px solid var(--sky-med);">
+        <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--steel);margin-bottom:4px;">Total Transactions</div>
+        <div style="font-size:1.5rem;font-weight:800;color:var(--sky-med-dark);">{{ history|length }}</div>
+        <div style="font-size:.74rem;color:var(--steel-light);">stock movements recorded</div>
+    </div>
+</div>
+
+<div class="ns-panel panel-steel">
+    <div class="ns-panel-head">
+        <h6>
+            <div class="head-icon"><i class="bi bi-graph-up-arrow"></i></div>
+            Movement Log
+        </h6>
+    </div>
+    <div class="ns-table-wrap">
+        <table class="ns-table">
+            <thead>
+                <tr>
+                    <th>#</th><th>Type</th><th>Product</th>
+                    <th>Changed</th><th>Before</th><th>After</th>
+                    <th>User</th><th>Date & Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in history %}
+                <tr>
+                    <td style="color:var(--steel-light);font-size:.72rem;font-weight:600;">#{{ h.id }}</td>
+                    <td>
+                        {% if h.action_type=='IN' %}
+                        <span class="st-badge st-ok"><i class="bi bi-plus-circle-fill"></i> IN</span>
+                        {% else %}
+                        <span class="st-badge st-low"><i class="bi bi-dash-circle-fill"></i> OUT</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-weight:600;color:var(--navy-dark);">{{ h.product_name }}</td>
+                    <td>
+                        {% if h.action_type=='IN' %}
+                        <span style="color:var(--success);font-weight:800;font-size:.9rem;">+{{ h.quantity_changed }}</span>
+                        {% else %}
+                        <span style="color:var(--danger);font-weight:800;font-size:.9rem;">-{{ h.quantity_changed }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="color:var(--steel-light);font-size:.85rem;">{{ h.quantity_before }}</td>
+                    <td style="font-weight:700;font-size:.85rem;color:var(--navy-dark);">{{ h.quantity_after }}</td>
+                    <td><span class="user-chip">{{ h.user }}</span></td>
+                    <td style="font-size:.74rem;color:var(--steel-light);white-space:nowrap;">{{ h.timestamp }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8">
+                    <div class="empty-box" style="padding:48px;">
+                        <i class="bi bi-graph-up"></i>
+                        <h5>No Movements Yet</h5>
+                        <p>Use Stock In / Out on the Products page to start tracking.</p>
+                    </div>
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

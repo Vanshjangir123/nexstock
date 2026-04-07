@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="pg-head">
+    <div>
+        <div class="pg-head-title">Good day, {{ session.full_name or session.user }} 👋</div>
+        <div class="pg-head-sub">Here's your warehouse overview for today</div>
+    </div>
+    <button class="btn-sky" onclick="openModal('addProductModal')">
+        <i class="bi bi-plus-lg"></i> Add Product
+    </button>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi-grid">
+    <div class="kpi-card kpi-c1">
+        <div class="kpi-row-top">
+            <div class="kpi-label">Total Products</div>
+            <div class="kpi-icon"><i class="bi bi-box-seam-fill"></i></div>
+        </div>
+        <div class="kpi-value counter" data-target="{{ total_products }}">0</div>
+        <div class="kpi-foot">Unique SKUs &nbsp;·&nbsp; <a href="{{ url_for('products') }}">View all →</a></div>
+    </div>
+
+    <div class="kpi-card kpi-c2">
+        <div class="kpi-row-top">
+            <div class="kpi-label">Total Units</div>
+            <div class="kpi-icon"><i class="bi bi-stack"></i></div>
+        </div>
+        <div class="kpi-value counter" data-target="{{ total_quantity }}">0</div>
+        <div class="kpi-foot">In warehouse &nbsp;·&nbsp; <a href="{{ url_for('stock_history') }}">History →</a></div>
+    </div>
+
+    <div class="kpi-card kpi-c3">
+        <div class="kpi-row-top">
+            <div class="kpi-label">Inventory Value</div>
+            <div class="kpi-icon"><i class="bi bi-currency-rupee"></i></div>
+        </div>
+        <div class="kpi-value">₹{{ "{:,.0f}".format(total_value) }}</div>
+        <div class="kpi-foot">Total worth &nbsp;·&nbsp; <a href="{{ url_for('categories') }}">By category →</a></div>
+    </div>
+
+    <div class="kpi-card {% if low_stock|length > 0 or out_of_stock > 0 %}kpi-c4{% else %}kpi-c4-ok{% endif %}">
+        <div class="kpi-row-top">
+            <div class="kpi-label">Alerts</div>
+            <div class="kpi-icon"><i class="bi bi-{% if low_stock|length > 0 or out_of_stock > 0 %}exclamation-triangle-fill{% else %}check-circle-fill{% endif %}"></i></div>
+        </div>
+        <div class="kpi-value">{{ low_stock|length + out_of_stock }}</div>
+        <div class="kpi-foot">{{ out_of_stock }} out of stock · {{ low_stock|length }} low</div>
+    </div>
+</div>
+
+<!-- Main 2-col grid -->
+<div class="dash-grid">
+
+    <!-- LEFT column -->
+    <div style="display:flex;flex-direction:column;gap:18px;">
+
+        <!-- Low Stock Alerts Panel -->
+        <div class="ns-panel {% if low_stock|length > 0 or out_of_stock > 0 %}panel-alert{% else %}panel-sky{% endif %}">
+            <div class="ns-panel-head">
+                <h6>
+                    {% if low_stock|length > 0 or out_of_stock > 0 %}<span class="live-dot"></span>{% endif %}
+                    <div class="head-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                    Low Stock Alerts
+                    {% if low_stock|length %}
+                    <span style="background:var(--danger);color:white;font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:4px;">{{ low_stock|length }}</span>
+                    {% endif %}
+                </h6>
+                <a href="{{ url_for('products') }}" class="btn-outline btn-sm">Manage →</a>
+            </div>
+            {% if low_stock %}
+            <div>
+                {% for p in low_stock %}
+                <div class="ls-item">
+                    <div>
+                        <div class="ls-name">{{ p.name }}</div>
+                        <div class="ls-meta">{{ p.category }}</div>
+                    </div>
+                    <span class="st-badge {% if p.quantity <= 1 %}st-crit{% else %}st-low{% endif %}">
+                        <i class="bi bi-exclamation-triangle-fill"></i> {{ p.quantity }} left
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-box" style="padding:24px;">
+                <i class="bi bi-check-circle-fill" style="color:var(--success);font-size:2rem;margin-bottom:8px;"></i>
+                <h5>All levels healthy!</h5>
+                <p>No products running low right now.</p>
+            </div>
+            {% endif %}
+            {% if out_of_stock > 0 %}
+            <div style="margin:0 16px 14px;padding:10px 14px;background:var(--danger-bg);border:1px solid #fbbcc8;border-radius:var(--r-sm);font-size:.8rem;color:#b8283c;display:flex;align-items:center;gap:8px;">
+                <i class="bi bi-x-circle-fill"></i>
+                <strong>{{ out_of_stock }}</strong> product(s) are completely out of stock.
+                <a href="{{ url_for('products') }}" style="color:#b8283c;font-weight:700;margin-left:4px;">Restock →</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Activity Feed Panel -->
+        <div class="ns-panel panel-navy">
+            <div class="ns-panel-head">
+                <h6>
+                    <div class="head-icon"><i class="bi bi-activity"></i></div>
+                    Recent Activity
+                </h6>
+                <a href="{{ url_for('activity') }}" style="color:var(--sky-light);font-size:.78rem;font-weight:600;">Full log →</a>
+            </div>
+            {% for log in recent_activity %}
+            <div class="act-item">
+                <div class="act-av {% if 'IN' in log.action %}av-in{% elif 'OUT' in log.action %}av-out{% elif 'ADD' in log.action %}av-add{% elif 'DEL' in log.action %}av-del{% elif 'EDIT' in log.action %}av-edit{% else %}av-other{% endif %}">
+                    {% if 'IN' in log.action %}<i class="bi bi-plus-lg"></i>
+                    {% elif 'OUT' in log.action %}<i class="bi bi-dash-lg"></i>
+                    {% elif 'ADD' in log.action %}<i class="bi bi-plus-square-fill"></i>
+                    {% elif 'DEL' in log.action %}<i class="bi bi-trash-fill"></i>
+                    {% elif 'EDIT' in log.action %}<i class="bi bi-pencil-fill"></i>
+                    {% else %}<i class="bi bi-circle-fill"></i>{% endif %}
+                </div>
+                <div class="act-info" style="flex:1;overflow:hidden;">
+                    <div class="act-label">{{ log.action }}</div>
+                    <div class="act-desc">{{ log.product_name if log.product_name != '-' else log.details }}</div>
+                </div>
+                <div class="act-time">{{ log.timestamp[11:16] }}</div>
+            </div>
+            {% else %}
+            <div class="empty-box" style="padding:24px;"><i class="bi bi-clock-history"></i><p>No activity yet.</p></div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- RIGHT column -->
+    <div style="display:flex;flex-direction:column;gap:18px;">
+
+        <!-- Top Products by Value -->
+        <div class="ns-panel panel-steel">
+            <div class="ns-panel-head">
+                <h6>
+                    <div class="head-icon"><i class="bi bi-trophy-fill"></i></div>
+                    Top 5 by Value
+                </h6>
+            </div>
+            <div style="padding:18px;">
+                {% for p in top_products %}
+                <div class="prog-row">
+                    <div class="prog-meta">
+                        <span class="prog-name">
+                            <span style="width:20px;height:20px;border-radius:50%;background:var(--sky-light);color:var(--navy);font-size:.65rem;font-weight:800;display:inline-flex;align-items:center;justify-content:center;margin-right:7px;">{{ loop.index }}</span>
+                            {{ p.name[:24] }}{% if p.name|length > 24 %}…{% endif %}
+                        </span>
+                        <span class="prog-val">₹{{ "{:,.0f}".format(p.total_val) }}</span>
+                    </div>
+                    <div class="prog-track">
+                        <div class="prog-bar" data-w="{% if top_products[0].total_val > 0 %}{{ (p.total_val / top_products[0].total_val * 100)|int }}{% else %}0{% endif %}%"></div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-box"><p>No products yet.</p></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Categories Quick View -->
+        <div class="ns-panel panel-sky">
+            <div class="ns-panel-head">
+                <h6>
+                    <div class="head-icon"><i class="bi bi-tags-fill"></i></div>
+                    Categories
+                </h6>
+                <a href="{{ url_for('categories') }}" class="btn-outline btn-sm">All →</a>
+            </div>
+            <div>
+                {% for cat in categories %}
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 22px;border-bottom:1px solid rgba(136,189,242,0.12);">
+                    <span style="font-size:.85rem;font-weight:600;color:var(--navy-dark);">{{ cat.category }}</span>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span class="cat-chip" style="font-size:.68rem;">{{ cat.count }} items</span>
+                        <span style="font-size:.73rem;color:var(--steel);">{{ cat.total_qty or 0 }} units</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ADD PRODUCT MODAL (accessible from dashboard too) -->
+<div class="modal-bg" id="addProductModal">
+    <div class="modal-box">
+        <div class="modal-hdr mhdr-add">
+            <h5><div class="modal-hdr-icon"><i class="bi bi-plus-circle-fill"></i></div> Add New Product</h5>
+            <button class="modal-close" onclick="closeModal('addProductModal')"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <form method="POST" action="{{ url_for('add_product') }}">
+            <div class="modal-body">
+                <div class="form-sec"><i class="bi bi-info-circle-fill"></i> Product Details</div>
+                <div class="form-g"><label class="form-lbl">Name <span class="req">*</span></label><input type="text" name="name" class="form-ctrl" placeholder="e.g. Samsung 4K Monitor" required></div>
+                <div class="form-row">
+                    <div class="form-g"><label class="form-lbl">Category <span class="req">*</span></label><input type="text" name="category" class="form-ctrl" placeholder="e.g. Electronics" list="csList" required><datalist id="csList"><option value="Electronics"><option value="Furniture"><option value="Accessories"><option value="Stationery"><option value="Clothing"><option value="Food & Beverages"></datalist></div>
+                    <div class="form-g"><label class="form-lbl">Supplier</label><input type="text" name="supplier" class="form-ctrl" placeholder="e.g. Samsung India"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-g"><label class="form-lbl">Quantity <span class="req">*</span></label><input type="number" name="quantity" class="form-ctrl" placeholder="0" min="0" required></div>
+                    <div class="form-g"><label class="form-lbl">Unit Price ₹ <span class="req">*</span></label><input type="number" name="price" class="form-ctrl" placeholder="0.00" step="0.01" min="0" required></div>
+                </div>
+                <div class="form-g mb-0"><label class="form-lbl">Description</label><textarea name="description" class="form-ctrl" rows="2" placeholder="Optional notes…"></textarea></div>
+            </div>
+            <div class="modal-ftr">
+                <button type="button" class="btn-outline btn-sm" onclick="closeModal('addProductModal')">Cancel</button>
+                <button type="submit" class="btn-sky btn-sm"><i class="bi bi-plus-circle-fill"></i> Add Product</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
