@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Add Product{% endblock %}
+{% block page_title %}Add Product{% endblock %}
+{% block content %}
+<div class="breadcrumb-ns"><a href="{{ url_for('dashboard') }}">Dashboard</a><i class="bi bi-chevron-right"></i><a href="{{ url_for('products') }}">Products</a><i class="bi bi-chevron-right"></i><span>Add Product</span></div>
+<div class="pg-head">
+    <div><div class="pg-head-title">Add New Product</div><div class="pg-head-sub">Fill in the details to add to your inventory</div></div>
+    <a href="{{ url_for('products') }}" class="btn-outline"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+<div style="display:grid;grid-template-columns:1fr 270px;gap:20px;align-items:start;">
+    <div class="ns-panel">
+        <div class="ns-panel-head panel-sky" style="background:linear-gradient(135deg,var(--sky-light),#d4eafd);">
+            <h6><div class="head-icon" style="background:var(--sky-med);color:white;"><i class="bi bi-plus-circle-fill"></i></div> Product Information</h6>
+        </div>
+        <div style="padding:24px;">
+            <form method="POST" action="{{ url_for('add_product') }}" novalidate>
+                <div class="form-sec"><i class="bi bi-info-circle-fill"></i> Basic Info</div>
+                <div class="form-g"><label class="form-lbl">Product Name <span class="req">*</span></label><input type="text" name="name" class="form-ctrl" placeholder="e.g. Samsung 65-inch 4K Smart TV" required autofocus></div>
+                <div class="form-row">
+                    <div class="form-g"><label class="form-lbl">Category <span class="req">*</span></label><input type="text" name="category" class="form-ctrl" placeholder="e.g. Electronics" list="cList" required><datalist id="cList"><option value="Electronics"><option value="Furniture"><option value="Accessories"><option value="Stationery"><option value="Clothing"><option value="Food & Beverages"><option value="Tools & Hardware"></datalist></div>
+                    <div class="form-g"><label class="form-lbl">Supplier</label><input type="text" name="supplier" class="form-ctrl" placeholder="e.g. Samsung India"></div>
+                </div>
+                <div class="form-sec mt-3"><i class="bi bi-currency-rupee"></i> Stock & Pricing</div>
+                <div class="form-row">
+                    <div class="form-g"><label class="form-lbl">Quantity <span class="req">*</span></label><input type="number" name="quantity" class="form-ctrl" placeholder="0" min="0" required></div>
+                    <div class="form-g"><label class="form-lbl">Unit Price ₹ <span class="req">*</span></label><input type="number" name="price" class="form-ctrl" placeholder="0.00" step="0.01" min="0" required></div>
+                </div>
+                <div class="form-sec mt-3"><i class="bi bi-card-text"></i> Notes</div>
+                <div class="form-g"><label class="form-lbl">Description</label><textarea name="description" class="form-ctrl" rows="3" placeholder="Optional: specs, SKU, storage notes…"></textarea></div>
+                <div class="form-actions"><a href="{{ url_for('products') }}" class="btn-outline btn-sm">Cancel</a><button type="submit" class="btn-sky btn-sm"><i class="bi bi-plus-circle-fill"></i> Add Product</button></div>
+            </form>
+        </div>
+    </div>
+    <div class="tips-box">
+        <h6><i class="bi bi-lightbulb-fill"></i> Quick Tips</h6>
+        <ul class="tips-list">
+            <li>Use a clear, searchable product name</li>
+            <li>Categories help analytics & filtering</li>
+            <li>Supplier info helps with restocking</li>
+            <li>Set quantity to current warehouse count</li>
+            <li>Low stock alert triggers under 5 units</li>
+            <li>Use Stock In/Out to track changes later</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
