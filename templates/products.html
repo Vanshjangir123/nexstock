@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+{% block title %}Products{% endblock %}
+{% block page_title %}Products{% endblock %}
+
+{% block content %}
+<div class="pg-head">
+    <div>
+        <div class="pg-head-title">Products</div>
+        <div class="pg-head-sub">{{ products|length }} item(s) in inventory</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="{{ url_for('export_csv') }}" class="btn-outline"><i class="bi bi-download"></i> Export CSV</a>
+        <button class="btn-sky" onclick="openModal('addProductModal')"><i class="bi bi-plus-lg"></i> Add Product</button>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="ns-panel" style="margin-bottom:16px;">
+    <form method="GET" action="{{ url_for('products') }}" id="ff" style="display:contents;">
+        <div class="filter-strip">
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input type="text" name="search" placeholder="Search name, category, supplier…" value="{{ search }}" oninput="this.form.submit()">
+            </div>
+            <select name="category" class="filter-sel" onchange="this.form.submit()">
+                <option value="">All Categories</option>
+                {% for c in all_categories %}<option value="{{ c.category }}" {% if category_filter==c.category %}selected{% endif %}>{{ c.category }}</option>{% endfor %}
+            </select>
+            <select name="sort" class="filter-sel" onchange="this.form.submit()">
+                <option value="date_added" {% if sort_by=='date_added' %}selected{% endif %}>Date Added</option>
+                <option value="name"       {% if sort_by=='name' %}selected{% endif %}>Name</option>
+                <option value="quantity"   {% if sort_by=='quantity' %}selected{% endif %}>Quantity</option>
+                <option value="price"      {% if sort_by=='price' %}selected{% endif %}>Price</option>
+            </select>
+            <select name="order" class="filter-sel" onchange="this.form.submit()">
+                <option value="DESC" {% if order=='DESC' %}selected{% endif %}>↓ Desc</option>
+                <option value="ASC"  {% if order=='ASC'  %}selected{% endif %}>↑ Asc</option>
+            </select>
+            {% if search or category_filter %}<a href="{{ url_for('products') }}" class="btn-outline btn-sm"><i class="bi bi-x-lg"></i> Clear</a>{% endif %}
+            <span class="filter-count">{{ products|length }} result(s)</span>
+        </div>
+    </form>
+</div>
+
+<!-- Products Table -->
+<div class="ns-panel">
+    {% if products %}
+    <div class="ns-table-wrap">
+        <table class="ns-table" id="productsTable">
+            <thead>
+                <tr>
+                    <th>#</th><th>Product</th><th>Category</th><th>Status</th>
+                    <th>Price</th><th>Supplier</th><th>Added</th><th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr class="{% if p.quantity==0 %}row-out{% elif p.quantity<5 %}row-low{% endif %}">
+                    <td style="font-size:.73rem;color:var(--steel);font-weight:600;">#{{ p.id }}</td>
+                    <td>
+                        <div class="prod-cell">
+                            <div class="prod-av">{{ p.name[0].upper() }}</div>
+                            <div>
+                                <div class="prod-name">{{ p.name }}</div>
+                                {% if p.description %}<div class="prod-desc">{{ p.description[:34] }}{% if p.description|length>34 %}…{% endif %}</div>{% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="cat-chip">{{ p.category }}</span></td>
+                    <td>
+                        {% if p.quantity==0 %}
+                            <span class="st-badge st-out"><i class="bi bi-x-circle-fill"></i> Out of Stock</span>
+                        {% elif p.quantity<3 %}
+                            <span class="st-badge st-crit"><i class="bi bi-exclamation-triangle-fill"></i> Critical ({{ p.quantity }})</span>
+                        {% elif p.quantity<5 %}
+                            <span class="st-badge st-low"><i class="bi bi-exclamation-circle-fill"></i> Low ({{ p.quantity }})</span>
+                        {% elif p.quantity<20 %}
+                            <span class="st-badge st-med"><i class="bi bi-dash-circle"></i> {{ p.quantity }} units</span>
+                        {% else %}
+                            <span class="st-badge st-ok"><i class="bi bi-check-circle-fill"></i> {{ p.quantity }} units</span>
+                        {% endif %}
+                    </td>
+                    <td class="price-val">₹{{ "{:,.2f}".format(p.price) }}</td>
+                    <td style="font-size:.8rem;color:var(--steel);">{{ p.supplier or '—' }}</td>
+                    <td style="font-size:.73rem;color:var(--steel-light);">{{ p.date_added[:10] }}</td>
+                    <td>
+                        <div class="act-group">
+                            <button class="btn-icon-action bia-in"  onclick="openStockModal({{ p.id }},'in','{{ p.name|e }}',{{ p.quantity }})"  title="Stock In"><i class="bi bi-box-arrow-in-down"></i></button>
+                            <button class="btn-icon-action bia-out" onclick="openStockModal({{ p.id }},'out','{{ p.name|e }}',{{ p.quantity }})" title="Stock Out"><i class="bi bi-box-arrow-up"></i></button>
+                            <a href="{{ url_for('edit_product',id=p.id) }}" class="btn-icon-action bia-edit" title="Edit"><i class="bi bi-pencil-fill"></i></a>
+                            <button class="btn-icon-action bia-del" onclick="openDeleteModal({{ p.id }},'{{ p.name|e }}')" title="Delete"><i class="bi bi-trash-fill"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-box">
+        <i class="bi bi-inbox-fill"></i>
+        <h5>No Products Found</h5>
+        {% if search or category_filter %}<p>Try adjusting filters.</p><a href="{{ url_for('products') }}" class="btn-outline btn-sm mt-3">Clear Filters</a>
+        {% else %}<p>Your inventory is empty.</p><button class="btn-sky mt-3" onclick="openModal('addProductModal')"><i class="bi bi-plus-lg"></i> Add First Product</button>{% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- ── ADD PRODUCT MODAL ── -->
+<div class="modal-bg" id="addProductModal">
+    <div class="modal-box">
+        <div class="modal-hdr mhdr-add">
+            <h5><div class="modal-hdr-icon"><i class="bi bi-plus-circle-fill"></i></div> Add New Product</h5>
+            <button class="modal-close" onclick="closeModal('addProductModal')"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <form method="POST" action="{{ url_for('add_product') }}">
+            <div class="modal-body">
+                <div class="form-sec"><i class="bi bi-info-circle-fill"></i> Product Details</div>
+                <div class="form-g"><label class="form-lbl">Product Name <span class="req">*</span></label><input type="text" name="name" class="form-ctrl" placeholder="e.g. Samsung 4K Monitor" required></div>
+                <div class="form-row">
+                    <div class="form-g"><label class="form-lbl">Category <span class="req">*</span></label><input type="text" name="category" class="form-ctrl" placeholder="e.g. Electronics" list="catDL" required><datalist id="catDL"><option value="Electronics"><option value="Furniture"><option value="Accessories"><option value="Stationery"><option value="Clothing"><option value="Food & Beverages"><option value="Tools & Hardware"></datalist></div>
+                    <div class="form-g"><label class="form-lbl">Supplier</label><input type="text" name="supplier" class="form-ctrl" placeholder="e.g. Apple India"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-g"><label class="form-lbl">Quantity <span class="req">*</span></label><input type="number" name="quantity" class="form-ctrl" placeholder="0" min="0" required></div>
+                    <div class="form-g"><label class="form-lbl">Price ₹ <span class="req">*</span></label><input type="number" name="price" class="form-ctrl" placeholder="0.00" step="0.01" min="0" required></div>
+                </div>
+                <div class="form-g mb-0"><label class="form-lbl">Description</label><textarea name="description" class="form-ctrl" rows="2" placeholder="Optional specs, SKU, notes…"></textarea></div>
+            </div>
+            <div class="modal-ftr">
+                <button type="button" class="btn-outline btn-sm" onclick="closeModal('addProductModal')">Cancel</button>
+                <button type="submit" class="btn-sky btn-sm"><i class="bi bi-plus-circle-fill"></i> Add Product</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ── STOCK IN/OUT MODAL ── -->
+<div class="modal-bg" id="stockModal">
+    <div class="modal-box" style="max-width:420px;">
+        <div class="modal-hdr" id="stockMhdr">
+            <h5 id="stockMtitle"><div class="modal-hdr-icon" id="stockMicon"><i class="bi bi-box-seam"></i></div> Stock Update</h5>
+            <button class="modal-close" onclick="closeModal('stockModal')"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <form method="POST" id="stockForm">
+            <div class="modal-body">
+                <div id="stockMinfo" style="font-size:.84rem;color:var(--steel);margin-bottom:14px;padding:10px 14px;background:var(--sky-light);border-radius:var(--r-sm);border:1px solid rgba(136,189,242,.3);"></div>
+                <div class="form-g mb-0">
+                    <label class="form-lbl" id="stockMlabel">Quantity</label>
+                    <div class="input-with-icon">
+                        <i class="bi bi-box-seam-fill"></i>
+                        <input type="number" name="amount" id="stockMqty" class="form-ctrl" placeholder="Enter quantity" min="1" required>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-ftr">
+                <button type="button" class="btn-outline btn-sm" onclick="closeModal('stockModal')">Cancel</button>
+                <button type="submit" id="stockMsubmit" class="btn-sky btn-sm">Confirm</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ── DELETE MODAL ── -->
+<div class="modal-bg" id="deleteModal">
+    <div class="modal-box" style="max-width:400px;">
+        <div class="modal-hdr mhdr-del">
+            <h5><div class="modal-hdr-icon"><i class="bi bi-trash-fill"></i></div> Delete Product</h5>
+            <button class="modal-close" onclick="closeModal('deleteModal')"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div style="padding:28px;text-align:center;">
+            <i class="bi bi-exclamation-triangle-fill" style="font-size:2.5rem;color:var(--danger);display:block;margin-bottom:14px;"></i>
+            <p style="font-size:.9rem;font-weight:600;color:var(--navy-dark);margin-bottom:4px;">Delete <span id="delName"></span>?</p>
+            <p style="font-size:.8rem;color:var(--steel-light);">This action cannot be undone.</p>
+        </div>
+        <form method="POST" id="delForm">
+            <div class="modal-ftr">
+                <button type="button" class="btn-outline btn-sm" onclick="closeModal('deleteModal')">Keep It</button>
+                <button type="submit" style="background:var(--danger);color:white;border:none;padding:7px 16px;border-radius:var(--r-sm);font-family:var(--font);font-size:.82rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:var(--t);">
+                    <i class="bi bi-trash-fill"></i> Delete
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openStockModal(id, type, name, qty){
+    const isIn = type==='in';
+    const hdr = document.getElementById('stockMhdr');
+    hdr.className = 'modal-hdr ' + (isIn ? 'mhdr-in' : 'mhdr-out');
+    document.getElementById('stockMicon').innerHTML = isIn ? '<i class="bi bi-box-arrow-in-down"></i>' : '<i class="bi bi-box-arrow-up"></i>';
+    document.getElementById('stockMtitle').innerHTML = hdr.querySelector('.modal-hdr-icon').outerHTML + ' ' + (isIn ? 'Stock In — ' : 'Stock Out — ') + name;
+    document.getElementById('stockMinfo').innerHTML = '<i class="bi bi-info-circle-fill me-2"></i>Product: <strong>' + name + '</strong> · Current stock: <strong>' + qty + ' units</strong>';
+    document.getElementById('stockMlabel').textContent = isIn ? 'Quantity to Add' : 'Quantity to Remove';
+    const btn = document.getElementById('stockMsubmit');
+    btn.textContent = isIn ? 'Add Stock' : 'Remove Stock';
+    btn.className = isIn ? 'btn-sky btn-sm' : 'btn-outline btn-sm';
+    if(!isIn){ document.getElementById('stockMqty').max = qty; }
+    else { document.getElementById('stockMqty').removeAttribute('max'); }
+    document.getElementById('stockForm').action = isIn ? '/stock_in/'+id : '/stock_out/'+id;
+    document.getElementById('stockMqty').value = '';
+    openModal('stockModal');
+    setTimeout(()=>document.getElementById('stockMqty').focus(), 300);
+}
+function openDeleteModal(id, name){
+    document.getElementById('delName').textContent = '"' + name + '"';
+    document.getElementById('delForm').action = '/delete_product/' + id;
+    openModal('deleteModal');
+}
+document.querySelectorAll('.modal-bg').forEach(el=>{
+    el.addEventListener('click', e=>{ if(e.target===el) closeModal(el.id); });
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-bg.open').forEach(m=>closeModal(m.id)); });
+</script>
+{% endblock %}
